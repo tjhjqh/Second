@@ -52,12 +52,20 @@ namespace Salton
 
         private void bankReconciliationStripMenuItem_Click(object sender, EventArgs e)
         {
-            double[] numbers = { -0.47, -0.35, -0.19, 0.23, 0.36, 0.47, 0.51, 0.59, 0.63, 0.79, 0.85,
-                0.91, 0.99, 1.02, 1.17, 1.25, 1.39, 1.44, 1.59, 1.60, 1.79, 1.88, 1.99, 2.14, 2.31 };
+            //double[] numbers = { -0.47, -0.35, -0.19, 0.23, 0.36, 0.47, 0.51, 0.59, 0.63, 0.79, 0.85,
+            //    0.91, 0.99, 1.02, 1.17, 1.25, 1.39, 1.44, 1.59, 1.60, 1.79, 1.88, 1.99, 2.14, 2.31 };
 
-            double target = 24.16;
+            //double target = 24.16;
 
-            DisplaySubsetsThatSumTo(target, numbers);
+            //DisplaySubsetsThatSumTo(target, numbers);
+
+            var newMDIChild = new BankReconciliation
+            {
+                MdiParent = this,
+            };
+            newMDIChild.Show();
+            
+
         }
 
         private static void DisplaySubsetsThatSumTo(double Target, double[] numbers)
