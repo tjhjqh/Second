@@ -63,6 +63,7 @@ namespace Salton
             this.bankToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bank_UploadToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tool_OTR_CSV_StripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.bankReconciliationStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.payrollStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.matchStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
@@ -309,7 +310,8 @@ namespace Salton
             // 
             this.bankToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.bank_UploadToolStripMenuItem,
-            this.tool_OTR_CSV_StripMenuItem});
+            this.tool_OTR_CSV_StripMenuItem,
+            this.bankReconciliationStripMenuItem});
             this.bankToolStripMenuItem.Name = "bankToolStripMenuItem";
             this.bankToolStripMenuItem.Size = new System.Drawing.Size(45, 20);
             this.bankToolStripMenuItem.Text = "&Bank";
@@ -327,6 +329,13 @@ namespace Salton
             this.tool_OTR_CSV_StripMenuItem.Size = new System.Drawing.Size(235, 22);
             this.tool_OTR_CSV_StripMenuItem.Text = "Create &OTR CSV Files";
             this.tool_OTR_CSV_StripMenuItem.Click += new System.EventHandler(this.tool_OTR_CSV_StripMenuItem_Click);
+            // 
+            // bankReconciliationStripMenuItem
+            // 
+            this.bankReconciliationStripMenuItem.Name = "bankReconciliationStripMenuItem";
+            this.bankReconciliationStripMenuItem.Size = new System.Drawing.Size(235, 22);
+            this.bankReconciliationStripMenuItem.Text = "Bank &Reconciliation";
+            this.bankReconciliationStripMenuItem.Click += new System.EventHandler(this.bankReconciliationStripMenuItem_Click);
             // 
             // payrollStripMenuItem
             // 
@@ -397,6 +406,7 @@ namespace Salton
         private System.Windows.Forms.ToolStripMenuItem tool_OTR_CSV_StripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem payrollStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem matchStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem bankReconciliationStripMenuItem;
     }
 }
 
