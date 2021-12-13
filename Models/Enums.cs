@@ -16,5 +16,9 @@ namespace Salton.Models
         USD,
         CAD
     }
+    public enum PaymentType
+    {
+        Debit
+    }
     
 }

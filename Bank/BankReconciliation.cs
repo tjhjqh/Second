@@ -24,9 +24,17 @@ namespace Salton.Bank
             DialogResult result =  folderBrowserDialog.ShowDialog();
             if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(folderBrowserDialog.SelectedPath))
             {
-                string[] files = Directory.GetFiles(folderBrowserDialog.SelectedPath);
+                try
+                {
+                    string[] files = Directory.GetFiles(folderBrowserDialog.SelectedPath);
 
-                BankReconciliationHelpers.Run(files,dateTimePicker.Value);
+                    BankReconciliationHelpers.Run(files, dateTimePicker.Value);
+
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message,"Error");
+                }
             }
         }
     }

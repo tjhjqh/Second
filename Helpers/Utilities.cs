@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -23,5 +24,29 @@ namespace Salton.Helpers
             }
         }
 
+        internal static DateTime? ToDate(string value)
+        {
+            DateTime dateValue;
+            CultureInfo enUS = new CultureInfo("en-US");
+            if (DateTime.TryParseExact(value, "MM/d/yyyy", enUS,
+              DateTimeStyles.None, out dateValue))
+            {
+                return dateValue;
+            }
+            return null;
+        }
+
+        internal static decimal? ToDecimal(string value)
+        {
+            if (!string.IsNullOrEmpty(value))
+            {
+                decimal decimalValue;
+                if (decimal.TryParse(value, out decimalValue))
+                {
+                    return decimalValue;
+                }
+            }
+            return null;
+        }
     }
 }
