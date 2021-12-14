@@ -1,13 +1,6 @@
 ﻿using Salton.Helpers;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Salton.Bank
@@ -34,12 +27,24 @@ namespace Salton.Bank
             {
                 string[] files = Directory.GetFiles(textBox_Folder.Text);
 
-                BankReconciliationHelpers.Run(files, dateTimePicker.Value);
+                BankReconciliationHelpers.Run(files, textBox_Target.Text,dateTimePicker.Value);
+
+                MessageBox.Show("Done!", "Information");
 
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "Error");
+            }
+
+        }
+
+        private void btn_SelectTarget_Click(object sender, EventArgs e)
+        {
+            DialogResult result = openFileDialog.ShowDialog();
+            if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(openFileDialog.FileName))
+            {
+                textBox_Target.Text = openFileDialog.FileName;
             }
 
         }

@@ -23,6 +23,7 @@ namespace Salton.Models
     {
         public PaymentType Type { get; set; }
         public string Expression { get; set; }
+        public string ColumnLetter { get; set; }
 
     }
     public class CashPayment
@@ -70,12 +71,24 @@ namespace Salton.Models
     public class BankPaymentReconciliation
     {
         public PaymentType Type { get; set; }
-        public IEnumerable<BankReconciliationRecord> BankReconciliationResult { get; set; }
+        public BankReconciliationResult BankReconciliationResult { get; set; }
     }
 
     public class BankReconciliationRecord
     {
         public BankTransaction BankTransaction { get; set; }
         public CashTransaction CashTransaction { get; set; }
+    }
+    public class BankReconciliationResult 
+    {
+        public IEnumerable<BankReconciliationRecord> BankReconciliationRecords { get; set; }
+
+        public decimal CurrentMonthAmount { get; set; }
+        public decimal PreviousMonthOutStanding { get; set; }
+        public decimal CurrentMonthOutStanding { get; set; }
+    }
+    public class BankFileMapping 
+    {
+        public string ThisMonthOutStanding { get; set; }
     }
 }

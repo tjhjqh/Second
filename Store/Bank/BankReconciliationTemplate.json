@@ -5,13 +5,24 @@
     "Payments": [
       {
         "Type": "Debit",
-        "Expression": "^EF[0-9]{4}\\s[0-9]{5}890\\s{2}DIV$"
+        "Expression": "^EF[0-9]{4}\\s[0-9]{5}890\\s{2}DIV$",
+        "ColumnLetter": "AV"
       },
       {
         "Type": "AMEX",
-        "Expression": "^AMX\\sDEP09950890\\s{2}DIV$"
+        "Expression": "^AMX\\sDEP09950890\\s{2}DIV$",
+        "ColumnLetter": "AY"
+      },
+      {
+        "Type": "Visa",
+        "Expression": "^VSA\\sDEP09950890\\s{2}DIV$",
+        "ColumnLetter": "AW"
+      },
+      {
+        "Type": "MasterCard",
+        "Expression": "^MC\\sDEP\\s09950890\\s{2}DIV$",
+        "ColumnLetter": "AX"
       }
-
     ]
   }
 ]

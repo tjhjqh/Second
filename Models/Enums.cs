@@ -25,6 +25,8 @@ namespace Salton.Models
     {
         AMEX,
         Debit,
+        Visa,
+        MasterCard
     }
     
 }
