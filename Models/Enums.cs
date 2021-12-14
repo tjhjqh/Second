@@ -26,7 +26,9 @@ namespace Salton.Models
         AMEX,
         Debit,
         Visa,
-        MasterCard
+        MasterCard,
+        UnionPay,
+        Cash,
     }
     
 }

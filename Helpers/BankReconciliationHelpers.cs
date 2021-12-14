@@ -7,16 +7,13 @@ using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace Salton.Helpers
 {
     public class BankReconciliationHelpers
     {
-        private static string ResultSheetName = "Bank Conciliation Result";
         private static List<StoreData> StoreDatas = new List<StoreData>();
         private static IEnumerable<Store> Stores;
         private static IEnumerable<BankTransaction> BankData;
@@ -73,9 +70,11 @@ namespace Salton.Helpers
 
                 foreach (var storeData in StoreDatas)
                 {
+                    var resultSheetName = $"{storeData.Store.Name} Result";
+                    PrepareStoreResultSheet(wb, resultSheetName);
                     foreach (var result in storeData.BankReconciliationResult)
                     {
-                        PopulateBankReconciliationResult(wb,ws,storeData,result, thisMonthOSRowNumber, lastMonthOSRowNumber, currentMonthRowNumber);
+                        PopulateBankReconciliationResult(wb,ws,storeData,result, thisMonthOSRowNumber, lastMonthOSRowNumber, currentMonthRowNumber, resultSheetName);
                     }
 
                 }
@@ -94,8 +93,17 @@ namespace Salton.Helpers
 
         }
 
+        private static void PrepareStoreResultSheet(XLWorkbook wb, string name)
+        {
+            if (wb.Worksheets.Any(p => p.Name == name))
+            {
+                wb.Worksheets.Delete(name);
+            }
+            wb.AddWorksheet(name);
+        }
+
         private static void PopulateBankReconciliationResult(XLWorkbook wb, IXLWorksheet ws, StoreData storeData, BankPaymentReconciliation result, 
-            int thisMonthOSRowNumber, int lastMonthOSRowNumber, int currentMonthRowNumber)
+            int thisMonthOSRowNumber, int lastMonthOSRowNumber, int currentMonthRowNumber, string resultSheetName)
         {
             var payment = storeData.Store.Payments.FirstOrDefault(p=>p.Type == result.Type);
             if (payment != null)
@@ -104,28 +112,38 @@ namespace Salton.Helpers
                 ws.Cell($"{payment.ColumnLetter}{thisMonthOSRowNumber}").SetValue(result.BankReconciliationResult.CurrentMonthOutStanding);
                 ws.Cell($"{payment.ColumnLetter}{lastMonthOSRowNumber}").SetValue(result.BankReconciliationResult.PreviousMonthOutStanding);
             }
-            if (result.BankReconciliationResult.BankReconciliationRecords.Any(p => p.CashTransaction == null))
-            {
-                PopulateMissMatchedSheet(wb,storeData.Store,payment, result.BankReconciliationResult.BankReconciliationRecords
-                .Where(p => p.CashTransaction == null).Select(p => p.BankTransaction));
-            }
+
+            PopulateResultSheet(wb,storeData.Store,payment, result,resultSheetName);
 
         }
 
-        private static void PopulateMissMatchedSheet(XLWorkbook wb, Store store, Payment payment, IEnumerable<BankTransaction> data)
+        private static void PopulateResultSheet(XLWorkbook wb, Store store, Payment payment, BankPaymentReconciliation result, string resultSheetName)
         {
-            if (!wb.Worksheets.Any(p => p.Name == ResultSheetName))
-            {
-                wb.AddWorksheet(ResultSheetName);
-            }
-            var ws = wb.Worksheet(ResultSheetName);
+
+            PopulateList(result.BankReconciliationResult.BankReconciliationRecords
+                .Where(p => p.CashTransaction == null).Select(p => p.BankTransaction), resultSheetName, 5, $"{store.Name} {payment.Type} MissMatched Records", wb);
+
+            PopulateList(result.BankReconciliationResult.PreviousMonthOutStandingRecords, resultSheetName, 4, $"{store.Name} {payment.Type} Previous Month OutStanding Records", wb);
+
+            PopulateList(result.BankReconciliationResult.CurrentMonthOutStandingRecords, resultSheetName, 4, $"{store.Name} {payment.Type} Current Month OutStanding Records", wb);
+
+
+        }
+
+        private static void PopulateList<T>(IEnumerable<T> data, string resultSheetName, int endIndex, string title, XLWorkbook wb)
+        {
+            var ws = wb.Worksheet(resultSheetName);
             var row = ws.LastRowUsed();
-            var startRow = row == null ? 1 : row.RowNumber() + 1;
-            var titleCell = ws.Cell($"A{startRow}");
-            titleCell.SetValue($"{store.Name} {payment.Type} MissMatched Records");
-            titleCell.AsRange().AddToNamed("Titles");
-            ws.Range(startRow, 1, startRow, 5).Merge().AddToNamed("Titles");
-            ws.Cell($"A{startRow + 1}").InsertTable(data);
+            var startRow = row == null ? 1 : row.RowNumber() + 2;
+            if (data.Any())
+            {
+                var titleCell = ws.Cell($"A{startRow}");
+                titleCell.SetValue(title);
+                titleCell.AsRange().AddToNamed("Titles");
+                ws.Range(startRow, 1, startRow, endIndex).Merge().AddToNamed("Titles");
+                ws.Cell($"A{startRow + 1}").InsertTable(data);
+                ws.Columns().AdjustToContents();
+            }
         }
 
         private static void CleanData()
@@ -152,40 +170,38 @@ namespace Salton.Helpers
                 };
                 list.Add(record);
             }
-            var currentMonthOutStandingDebit = cashPaymentData
-                .Where(p => !p.Matched && p.Date.HasValue && p.Date.Value.Month == date.Month && p.Date.Value.Year == date.Year)
-                .Sum(p => p.Debit ?? 0);
-            var currentMonthOutStandingCredit = cashPaymentData
-                .Where(p => !p.Matched && p.Date.HasValue && p.Date.Value.Month == date.Month && p.Date.Value.Year == date.Year)
-                .Sum(p => p.Credit ?? 0);
+            var currentMonthOutStandingRecords = cashPaymentData
+                .Where(p => !p.Matched && p.Date.HasValue && p.Date.Value.Month == date.Month && p.Date.Value.Year == date.Year);
+            var currentMonthOutStandingDebit = currentMonthOutStandingRecords.Sum(p => p.Debit ?? 0);
+            var currentMonthOutStandingCredit = currentMonthOutStandingRecords.Sum(p => p.Credit ?? 0);
 
             var previousMonthDate = date.AddMonths(-1);
-            var previousMonthOutStandingDebit = list
-                .Where(p =>p.CashTransaction!=null && p.CashTransaction.Date.HasValue && p.CashTransaction.Date.Value.Month == previousMonthDate.Month && p.CashTransaction.Date.Value.Year == previousMonthDate.Year)
-                .Sum(p => p.CashTransaction.Debit ?? 0);
-            var previousMonthOutStandingCredit = list
+
+            var previousMonthOutStandingRecords = list
                 .Where(p => p.CashTransaction != null && p.CashTransaction.Date.HasValue && p.CashTransaction.Date.Value.Month == previousMonthDate.Month && p.CashTransaction.Date.Value.Year == previousMonthDate.Year)
-                .Sum(p => p.CashTransaction.Credit ?? 0);
+                .Select(p=>p.CashTransaction);
 
-            var currentMonthAmountDebit = list
+            var previousMonthOutStandingDebit = previousMonthOutStandingRecords.Sum(p => p.Debit ?? 0);
+            var previousMonthOutStandingCredit = previousMonthOutStandingRecords.Sum(p => p.Credit ?? 0);
+
+            var currentMonthAmountRecords = list
                 .Where(p => p.CashTransaction != null &&
                     p.CashTransaction.Date.HasValue && p.BankTransaction.Date.Value.Month == p.CashTransaction.Date.Value.Month && p.BankTransaction.Date.Value.Year == p.CashTransaction.Date.Value.Year &&
                     p.BankTransaction.Date.HasValue && p.BankTransaction.Date.Value.Month == date.Month && p.BankTransaction.Date.Value.Year == date.Year
-                )
-                .Sum(p => p.BankTransaction.Debit ?? 0);
+                );
 
-            var currentMonthAmountCredit = list
-                .Where(p => p.CashTransaction != null &&
-                    p.CashTransaction.Date.HasValue && p.BankTransaction.Date.Value.Month == p.CashTransaction.Date.Value.Month && p.BankTransaction.Date.Value.Year == p.CashTransaction.Date.Value.Year &&
-                    p.BankTransaction.Date.HasValue && p.BankTransaction.Date.Value.Month == date.Month && p.BankTransaction.Date.Value.Year == date.Year
-                )
-                .Sum(p => p.BankTransaction.Credit ?? 0);
+            var currentMonthAmountDebit = currentMonthAmountRecords.Sum(p => p.BankTransaction.Debit ?? 0);
+
+            var currentMonthAmountCredit = currentMonthAmountRecords.Sum(p => p.BankTransaction.Credit ?? 0);
 
             return new BankReconciliationResult {
                 BankReconciliationRecords = list,
                 CurrentMonthOutStanding = currentMonthOutStandingCredit -  currentMonthOutStandingDebit,
                 PreviousMonthOutStanding = previousMonthOutStandingCredit - previousMonthOutStandingDebit,
-                CurrentMonthAmount = currentMonthAmountCredit - currentMonthAmountDebit
+                CurrentMonthAmount = currentMonthAmountCredit - currentMonthAmountDebit,
+                CurrentMonthOutStandingRecords = currentMonthOutStandingRecords,
+                PreviousMonthOutStandingRecords = previousMonthOutStandingRecords,
+                CurrentMonthAmountRecords = currentMonthAmountRecords
             };
         }
 
@@ -294,10 +310,16 @@ namespace Salton.Helpers
             using (var wb = new XLWorkbook(fileName, XLEventTracking.Disabled))
             {
                 var ws = wb.Worksheet(1);
-                ws.Cell("H1").Value = $"GIFT CERTIFICATE {ws.Cell("H1").Value}";
-                ws.Cell("I1").Value = $"GIFT CERTIFICATE {ws.Cell("I1").Value}";
-                ws.Cell("L1").Value = $"CREDIT NOTE {ws.Cell("L1").Value}";
-                ws.Cell("M1").Value = $"CREDIT NOTE {ws.Cell("M1").Value}";
+                var CreditNoteIssuedTitle = $"CREDIT NOTE {ws.Cell("L1").Value}";
+                var CreditNoteRedeemedTitle = $"CREDIT NOTE {ws.Cell("M1").Value}";
+                var GiftCertificateIssuedTitle = $"GIFT CERTIFICATE {ws.Cell("H1").Value}";
+                var GiftCertificateRedeemedTitle = $"GIFT CERTIFICATE {ws.Cell("I1").Value}";
+
+                ws.Cell("H1").Value = GiftCertificateIssuedTitle;
+                ws.Cell("I1").Value = GiftCertificateRedeemedTitle;
+                ws.Cell("L1").Value = CreditNoteIssuedTitle;
+                ws.Cell("M1").Value = CreditNoteRedeemedTitle;
+
                 DataTable dataTable = ws.RangeUsed().AsTable().AsNativeDataTable();
                 return dataTable.AsEnumerable().Select(p => new CashPayment
                 {
@@ -306,10 +328,25 @@ namespace Salton.Helpers
                     Amex = ReadDecimal(p, "Amex"),
                     Visa = ReadDecimal(p, "VISA"),
                     MasterCard = ReadDecimal(p, "MC"),
+                    Cash = ReadDecimal(p, "CASH"),
+                    CreditNoteIssued = ReadDecimal(p, CreditNoteIssuedTitle),
+                    CreditNoteRedeemed  = ReadDecimal(p, CreditNoteRedeemedTitle),
+                    Diff = ReadDecimal(p, "DIFF"),
+                    Discover = ReadDecimal(p, "Discover"),
+                    FxRate = ReadDecimal(p, "F/X"),
+                    Gc = ReadDecimal(p, "Gc"),
+                    GiftCertificateIssued = ReadDecimal(p, GiftCertificateIssuedTitle),
+                    GiftCertificateRedeemed = ReadDecimal(p, GiftCertificateRedeemedTitle),
+                    Gross = ReadDecimal(p, "GROSS"),
+                    GST = ReadDecimal(p, "GST"),
+                    NET = ReadDecimal(p, "NET"),
+                    PST = ReadDecimal(p, "PST"),
+                    Total = ReadDecimal(p, "TOTAL"),
+                    Union = ReadDecimal(p, "UNION"),
+                    UnKnow = ReadDecimal(p, "UNKNOWN"),
+                    Usd = ReadDecimal(p, "USD"),
                 }).ToList();
-
             }
-
         }
 
         private static BankFileMapping ReadBankFileMapping()

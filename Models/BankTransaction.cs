@@ -86,6 +86,9 @@ namespace Salton.Models
         public decimal CurrentMonthAmount { get; set; }
         public decimal PreviousMonthOutStanding { get; set; }
         public decimal CurrentMonthOutStanding { get; set; }
+        public IEnumerable<CashTransaction> CurrentMonthOutStandingRecords { get;  set; }
+        public IEnumerable<CashTransaction> PreviousMonthOutStandingRecords { get;  set; }
+        public IEnumerable<BankReconciliationRecord> CurrentMonthAmountRecords { get;  set; }
     }
     public class BankFileMapping 
     {
