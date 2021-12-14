@@ -33,6 +33,7 @@ namespace Salton.Bank
             this.textBox_Folder = new System.Windows.Forms.TextBox();
             this.btn_SelectFolder = new System.Windows.Forms.Button();
             this.dateTimePicker = new System.Windows.Forms.DateTimePicker();
+            this.btn_Run = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textBox_Folder
@@ -61,11 +62,22 @@ namespace Salton.Bank
             this.dateTimePicker.Size = new System.Drawing.Size(200, 23);
             this.dateTimePicker.TabIndex = 2;
             // 
+            // btn_Run
+            // 
+            this.btn_Run.Location = new System.Drawing.Point(19, 122);
+            this.btn_Run.Name = "btn_Run";
+            this.btn_Run.Size = new System.Drawing.Size(75, 23);
+            this.btn_Run.TabIndex = 3;
+            this.btn_Run.Text = "Run";
+            this.btn_Run.UseVisualStyleBackColor = true;
+            this.btn_Run.Click += new System.EventHandler(this.btn_Run_Click);
+            // 
             // BankReconciliation
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.btn_Run);
             this.Controls.Add(this.dateTimePicker);
             this.Controls.Add(this.btn_SelectFolder);
             this.Controls.Add(this.textBox_Folder);
@@ -82,5 +94,6 @@ namespace Salton.Bank
         private System.Windows.Forms.TextBox textBox_Folder;
         private System.Windows.Forms.Button btn_SelectFolder;
         private System.Windows.Forms.DateTimePicker dateTimePicker;
+        private System.Windows.Forms.Button btn_Run;
     }
 }

@@ -22,6 +22,7 @@ namespace Salton.Helpers
         private static string BankFileName = "Bank Statement";
         internal static void Run(string[] files, DateTime date)
         {
+            CleanData();
             Stores = ReadStoreData();
             if (!files.Any(p=> p.Contains(BankFileName,StringComparison.InvariantCultureIgnoreCase)))
             {
@@ -38,16 +39,94 @@ namespace Salton.Helpers
                 ReadCashPaymentDatas(files,store, date);
                 foreach (var payment in store.Payments)
                 {
-                    RunPayment(store, payment,date);
+                    var result = RunPayment(store, payment,date);
+                    var storeData = StoreDatas.FirstOrDefault(p => p.Store.Name == store.Name);
+                    if (storeData != null)
+                    {
+                        storeData.BankReconciliationResult.Add(new BankPaymentReconciliation
+                        {
+                            Type = payment.Type,
+                            BankReconciliationResult = result
+                        });
+                    }
                 }
 
             }
         }
 
-        private static void RunPayment(Store store, Payment payment, DateTime date)
+        private static void CleanData()
+        {
+            StoreDatas = new List<StoreData>();
+        }
+
+        private static IEnumerable<BankReconciliationRecord> RunPayment(Store store, Payment payment, DateTime date)
         {
             Regex rgx = new Regex(payment.Expression);
-            var bankPaymentData = BankData.Where(p=>rgx.IsMatch(p.Description)).ToList();
+            var bankPaymentData = BankData.Where(p=>rgx.IsMatch(p.Description) && p.Date.HasValue && p.Date.Value.Year == date.Year && p.Date.Value.Month == date.Month).ToList();
+            var cashPaymentData = GetCashPaymentData(store, payment);
+            var list = new List<BankReconciliationRecord>();
+            foreach (var bankPayment in bankPaymentData)
+            {
+                var matchCash = cashPaymentData.FirstOrDefault(p => !p.Matched && p.Credit == bankPayment.Credit && p.Debit == bankPayment.Debit);
+                if (matchCash != null)
+                {
+                    matchCash.Matched = true;
+                }
+                var record = new BankReconciliationRecord { 
+                    BankTransaction = bankPayment,
+                    CashTransaction = matchCash
+                };
+                list.Add(record);
+            }
+            return list;
+        }
+
+        private static IEnumerable<CashTransaction> GetCashPaymentData(Store store, Payment payment)
+        {
+            var storeData = StoreDatas.FirstOrDefault(p => p.Store.Name == store.Name);
+            if (storeData != null)
+            {
+                switch (payment.Type)
+                {
+                    case PaymentType.Debit:
+                        return storeData.PreviousMonthData.Select(p=>new CashTransaction { 
+                            Date = p.Date,
+                            Credit = GetCashAmount(p.Debit, AmountType.Credit),
+                            Debit = GetCashAmount(p.Debit, AmountType.Debit),
+                        }).Union(storeData.CurrentMonthData.Select(p => new CashTransaction
+                        {
+                            Date = p.Date,
+                            Credit = GetCashAmount(p.Debit, AmountType.Credit),
+                            Debit = GetCashAmount(p.Debit, AmountType.Debit),
+                        })).Where(p=>p.Credit.HasValue || p.Debit.HasValue);
+                    case PaymentType.AMEX:
+                        return storeData.PreviousMonthData.Select(p => new CashTransaction
+                        {
+                            Date = p.Date,
+                            Credit = GetCashAmount(p.Amex, AmountType.Credit),
+                            Debit = GetCashAmount(p.Amex, AmountType.Debit),
+                        }).Union(storeData.CurrentMonthData.Select(p => new CashTransaction
+                        {
+                            Date = p.Date,
+                            Credit = GetCashAmount(p.Amex, AmountType.Credit),
+                            Debit = GetCashAmount(p.Amex, AmountType.Debit),
+                        })).Where(p => p.Credit.HasValue || p.Debit.HasValue);
+                }
+            }
+            return null;
+        }
+
+        private static decimal? GetCashAmount(decimal? debit, AmountType type)
+        {
+            if (type == AmountType.Credit && debit.HasValue && debit.Value > 0)
+            {
+                return debit.Value;
+            }
+            if (type == AmountType.Debit && debit.HasValue && debit.Value < 0)
+            {
+                return -debit.Value;
+            }
+            return null;
         }
 
         private static void ReadCashPaymentDatas(string[] files, Store store,DateTime date)
@@ -63,7 +142,8 @@ namespace Salton.Helpers
                     storeData = new StoreData { 
                         Store = store,
                         CurrentMonthData = new List<CashPayment>(),
-                        PreviousMonthData = new List<CashPayment>()
+                        PreviousMonthData = new List<CashPayment>(),
+                        BankReconciliationResult = new List<BankPaymentReconciliation>()
                     };
                     StoreDatas.Add(storeData);
                 }
@@ -88,6 +168,8 @@ namespace Salton.Helpers
                 return dataTable.AsEnumerable().Select(p => new CashPayment
                 {
                     Date = ReadDatetime(p, "Date"),
+                    Debit = ReadDecimal(p, "Debit"),
+                    Amex = ReadDecimal(p, "Amex"),
                 }).ToList();
 
             }

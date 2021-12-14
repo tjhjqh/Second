@@ -11,7 +11,7 @@ namespace Salton.Models
 
         public List<CashPayment> PreviousMonthData { get; set; } = new List<CashPayment>();
         public List<CashPayment> CurrentMonthData { get; set; } = new List<CashPayment>();
-
+        public List<BankPaymentReconciliation> BankReconciliationResult { get; set; }
     }
     public class Store {
         public string Id { get; set; }
@@ -59,5 +59,23 @@ namespace Salton.Models
         public decimal? Debit { get; set; }
         public decimal? Credit { get; set; }
         public string Currency { get; set; }
+    }
+    public class CashTransaction
+    {
+        public DateTime? Date { get; set; }
+        public decimal? Debit { get; set; }
+        public decimal? Credit { get; set; }
+        public bool Matched { get; set; }
+    }
+    public class BankPaymentReconciliation
+    {
+        public PaymentType Type { get; set; }
+        public IEnumerable<BankReconciliationRecord> BankReconciliationResult { get; set; }
+    }
+
+    public class BankReconciliationRecord
+    {
+        public BankTransaction BankTransaction { get; set; }
+        public CashTransaction CashTransaction { get; set; }
     }
 }

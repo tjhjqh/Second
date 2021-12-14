@@ -6,6 +6,11 @@ using System.Threading.Tasks;
 
 namespace Salton.Models
 {
+    public enum AmountType
+    {
+        Debit,
+        Credit
+    }
     public enum Bank
     {
         TDNY,
@@ -18,7 +23,8 @@ namespace Salton.Models
     }
     public enum PaymentType
     {
-        Debit
+        AMEX,
+        Debit,
     }
     
 }
