@@ -145,6 +145,171 @@
       }
 
     ]
+  },
+  {
+    "Id": "034",
+    "Name": "The Core",
+    "Payments": [
+      {
+        "Type": "Debit",
+        "Expression": "^EF[0-9]{4}\\s[0-9]{5}034\\s{2}DIV$",
+        "ColumnLetter": "AA"
+      },
+      {
+        "Type": "UnionPay",
+        "Expression": "^XXX$",
+        "ColumnLetter": "AB"
+      },
+      {
+        "Type": "Visa",
+        "Expression": "^VSA\\sDEP04611034\\s{2}DIV$",
+        "ColumnLetter": "AC"
+      },
+      {
+        "Type": "MasterCard",
+        "Expression": "^MC\\sDEP\\s04611034\\s{2}DIV$",
+        "ColumnLetter": "AD"
+      },
+      {
+        "Type": "AMEX",
+        "Expression": "^AMX\\sDEP04611034\\s{2}DIV$",
+        "ColumnLetter": "AE"
+      }
+
+    ]
+  },
+  {
+    "Id": "624",
+    "Name": "Sussex",
+    "Payments": [
+      {
+        "Type": "Debit",
+        "Expression": "^EF[0-9]{4}\\s[0-9]{5}624\\s{2}DIV$",
+        "ColumnLetter": "AF"
+      },
+      {
+        "Type": "UnionPay",
+        "Expression": "^XXX$",
+        "ColumnLetter": "AG"
+      },
+      {
+        "Type": "Visa",
+        "Expression": "^VSA\\sDEP05265624\\s{2}DIV$",
+        "ColumnLetter": "AH"
+      },
+      {
+        "Type": "MasterCard",
+        "Expression": "^MC\\sDEP\\s05265624\\s{2}DIV$",
+        "ColumnLetter": "AI"
+      },
+      {
+        "Type": "AMEX",
+        "Expression": "^AMX\\sDEP05265624\\s{2}DIV$",
+        "ColumnLetter": "AJ"
+      }
+
+    ]
+  },
+  {
+    "Id": "414",
+    "Name": "Kitsilano",
+    "Payments": [
+      {
+        "Type": "Debit",
+        "Expression": "^TP[0-9]{4}\\s[0-9]{5}414\\s{2}DIV$",
+        "ColumnLetter": "AK"
+      },
+      {
+        "Type": "UnionPay",
+        "Expression": "^DEP\\sUP\\s06912414\\s{2}DIV$",
+        "ColumnLetter": "AL"
+      },
+      {
+        "Type": "Visa",
+        "Expression": "^DEP\\sVSA06912414\\s{2}DIV$",
+        "ColumnLetter": "AM"
+      },
+      {
+        "Type": "MasterCard",
+        "Expression": "^DEP\\sMC\\s06912414\\s{2}DIV$",
+        "ColumnLetter": "AN"
+      },
+      {
+        "Type": "AMEX",
+        "Expression": "^DEP\\sAMX06912414\\s{2}DIV$",
+        "ColumnLetter": "AO"
+      }
+
+    ]
+  },
+  {
+    "Id": "286",
+    "Name": "Yorkville",
+    "Payments": [
+      {
+        "Type": "Debit",
+        "Expression": "^TP[0-9]{4}\\s[0-9]{5}286\\s{2}DIV$",
+        "ColumnLetter": "AP"
+      },
+      {
+        "Type": "UnionPay",
+        "Expression": "^UP\\sDEP\\s08188286\\s{2}DIV$",
+        "ColumnLetter": "AQ"
+      },
+      {
+        "Type": "Visa",
+        "Expression": "^VSA\\sDEP08188286\\s{2}DIV$",
+        "ColumnLetter": "AR"
+      },
+      {
+        "Type": "MasterCard",
+        "Expression": "^MC\\sDEP\\s08188286\\s{2}DIV$",
+        "ColumnLetter": "AS"
+      },
+      {
+        "Type": "AMEX",
+        "Expression": "^AMX\\sDEP08188286\\s{2}DIV$",
+        "ColumnLetter": "AT"
+      },
+      {
+        "Type": "Cash",
+        "Expression": "^XXX$",
+        "ColumnLetter": "AU"
+      }
+
+    ]
+  },
+  {
+    "Id": "199",
+    "Name": "Halifax",
+    "Payments": [
+      {
+        "Type": "Debit",
+        "Expression": "^EF[0-9]{4}\\s[0-9]{5}199\\s{2}DIV$",
+        "ColumnLetter": "AZ"
+      },
+      {
+        "Type": "Visa",
+        "Expression": "^VSA\\sDEP10146199\\s{2}DIV$",
+        "ColumnLetter": "BA"
+      },
+      {
+        "Type": "MasterCard",
+        "Expression": "^MC\\sDEP\\s10146199\\s{2}DIV$",
+        "ColumnLetter": "BB"
+      },
+      {
+        "Type": "AMEX",
+        "Expression": "^AMX\\sDEP10146199\\s{2}DIV$",
+        "ColumnLetter": "BC"
+      },
+      {
+        "Type": "Cash",
+        "Expression": "^XXX$",
+        "ColumnLetter": "BD"
+      }
+
+    ]
   }
 
 ]
