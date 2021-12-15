@@ -188,17 +188,25 @@ namespace Salton.Helpers
 
         private static BankReconciliationResult RunPayment(Store store, Payment payment, DateTime date)
         {
+            var previousMonthDate = date.AddMonths(-1);
             Regex rgx = new Regex(payment.Expression);
             var bankPaymentData = BankData.Where(p=>rgx.IsMatch(p.Description) && p.Date.HasValue && p.Date.Value.Year == date.Year && p.Date.Value.Month == date.Month).ToList();
             var cashPaymentData = GetCashPaymentData(store, payment).ToList();
             var list = new List<BankReconciliationRecord>();
             foreach (var bankPayment in bankPaymentData)
             {
-                var matchCash = cashPaymentData.FirstOrDefault(p => !p.Matched && p.Credit == bankPayment.Credit && p.Debit == bankPayment.Debit);
+                var matchCash = cashPaymentData.FirstOrDefault(p => !p.Matched && p.Credit == bankPayment.Credit && p.Debit == bankPayment.Debit && 
+                    p.Date.HasValue && p.Date.Value.Month == date.Month && p.Date.Value.Year == date.Year
+                );
+                if (matchCash == null)
+                {
+                    matchCash = cashPaymentData.FirstOrDefault(p => !p.Matched && p.Credit == bankPayment.Credit && p.Debit == bankPayment.Debit);
+                }
                 if (matchCash != null)
                 {
                     matchCash.Matched = true;
                 }
+
                 var record = new BankReconciliationRecord { 
                     BankTransaction = bankPayment,
                     CashTransaction = matchCash
@@ -210,7 +218,6 @@ namespace Salton.Helpers
             var currentMonthOutStandingDebit = currentMonthOutStandingRecords.Sum(p => p.Debit ?? 0);
             var currentMonthOutStandingCredit = currentMonthOutStandingRecords.Sum(p => p.Credit ?? 0);
 
-            var previousMonthDate = date.AddMonths(-1);
 
             var previousMonthOutStandingRecords = list
                 .Where(p => p.CashTransaction != null && p.CashTransaction.Date.HasValue && p.CashTransaction.Date.Value.Month == previousMonthDate.Month && p.CashTransaction.Date.Value.Year == previousMonthDate.Year)
@@ -294,8 +301,30 @@ namespace Salton.Helpers
                             Credit = GetCashAmount(p.MasterCard, AmountType.Credit),
                             Debit = GetCashAmount(p.MasterCard, AmountType.Debit),
                         })).Where(p => p.Credit.HasValue || p.Debit.HasValue);
-
-
+                    case PaymentType.UnionPay:
+                        return storeData.PreviousMonthData.Select(p => new CashTransaction
+                        {
+                            Date = p.Date,
+                            Credit = GetCashAmount(p.Union, AmountType.Credit),
+                            Debit = GetCashAmount(p.Union, AmountType.Debit),
+                        }).Union(storeData.CurrentMonthData.Select(p => new CashTransaction
+                        {
+                            Date = p.Date,
+                            Credit = GetCashAmount(p.Union, AmountType.Credit),
+                            Debit = GetCashAmount(p.Union, AmountType.Debit),
+                        })).Where(p => p.Credit.HasValue || p.Debit.HasValue);
+                    case PaymentType.Cash:
+                        return storeData.PreviousMonthData.Select(p => new CashTransaction
+                        {
+                            Date = p.Date,
+                            Credit = GetCashAmount(p.Cash, AmountType.Credit),
+                            Debit = GetCashAmount(p.Cash, AmountType.Debit),
+                        }).Union(storeData.CurrentMonthData.Select(p => new CashTransaction
+                        {
+                            Date = p.Date,
+                            Credit = GetCashAmount(p.Cash, AmountType.Credit),
+                            Debit = GetCashAmount(p.Cash, AmountType.Debit),
+                        })).Where(p => p.Credit.HasValue || p.Debit.HasValue);
                 }
             }
             return null;
@@ -424,18 +453,22 @@ namespace Salton.Helpers
 
         private static decimal? ReadDecimal(DataRow row, string columnName)
         {
-            var columnType = row.Table.Columns[columnName].DataType;
-            if (columnType == typeof(string) || columnType == typeof(object))
+            var column = row.Table.Columns[columnName];
+            if (column != null)
             {
-                decimal value;
-                if (decimal.TryParse(row[columnName].ToString(), out value))
+                var columnType = row.Table.Columns[columnName].DataType;
+                if (columnType == typeof(string) || columnType == typeof(object))
                 {
-                    return value;
+                    decimal value;
+                    if (decimal.TryParse(row[columnName].ToString(), out value))
+                    {
+                        return value;
+                    }
                 }
-            }
-            if (columnType == typeof(double))
-            {
-                return (decimal)row.Field<double>(columnName);
+                if (columnType == typeof(double))
+                {
+                    return (decimal)row.Field<double>(columnName);
+                }
             }
             return null;
 

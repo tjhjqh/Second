@@ -27,7 +27,11 @@ namespace Salton.Bank
             {
                 string[] files = Directory.GetFiles(textBox_Folder.Text);
 
+                Cursor.Current = Cursors.WaitCursor;
+
                 BankReconciliationHelpers.Run(files, textBox_Target.Text,dateTimePicker.Value);
+
+                Cursor.Current = Cursors.Default;
 
                 MessageBox.Show("Done!", "Information");
 

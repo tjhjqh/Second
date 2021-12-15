@@ -24,5 +24,127 @@
         "ColumnLetter": "AX"
       }
     ]
+  },
+  {
+    "Id": "469",
+    "Name": "Rockland",
+    "Payments": [
+      {
+        "Type": "AMEX",
+        "Expression": "^AMX\\sDEP03492469\\s{2}DIV$",
+        "ColumnLetter": "H"
+      },
+      {
+        "Type": "Visa",
+        "Expression": "^VSA\\sDEP03492469\\s{2}DIV$",
+        "ColumnLetter": "D"
+      },
+      {
+        "Type": "MasterCard",
+        "Expression": "^MC\\sDEP\\s03492469\\s{2}DIV$",
+        "ColumnLetter": "F"
+      }
+    ]
+  },
+  {
+    "Id": "665",
+    "Name": "Granville",
+    "Payments": [
+      {
+        "Type": "Debit",
+        "Expression": "^EF[0-9]{4}\\s[0-9]{5}665\\s{2}DIV$",
+        "ColumnLetter": "J"
+      },
+      {
+        "Type": "UnionPay",
+        "Expression": "^XXX$",
+        "ColumnLetter": "K"
+      },
+      {
+        "Type": "AMEX",
+        "Expression": "^AMEX\\s9321859523\\s{2}DIV$",
+        "ColumnLetter": "N"
+      },
+      {
+        "Type": "Visa",
+        "Expression": "^VSA\\sDEP02672665\\s{2}DIV$",
+        "ColumnLetter": "L"
+      },
+      {
+        "Type": "MasterCard",
+        "Expression": "^MC\\sDEP\\s02672665\\s{2}DIV$",
+        "ColumnLetter": "M"
+      },
+      {
+        "Type": "Cash",
+        "Expression": "^DEPOT SVE",
+        "ColumnLetter": "O"
+      }
+    ]
+  },
+  {
+    "Id": "713",
+    "Name": "FCP",
+    "Payments": [
+      {
+        "Type": "Debit",
+        "Expression": "^EF[0-9]{4}\\s[0-9]{5}713\\s{2}DIV$",
+        "ColumnLetter": "Q"
+      },
+      {
+        "Type": "UnionPay",
+        "Expression": "^XXX$",
+        "ColumnLetter": "R"
+      },
+      {
+        "Type": "Visa",
+        "Expression": "^VSA\\sDEP03781713\\s{2}DIV$",
+        "ColumnLetter": "S"
+      },
+      {
+        "Type": "MasterCard",
+        "Expression": "^MC\\sDEP\\s03781713\\s{2}DIV$",
+        "ColumnLetter": "T"
+      },
+      {
+        "Type": "AMEX",
+        "Expression": "^AMX\\sDEP03781713\\s{2}DIV$",
+        "ColumnLetter": "U"
+      }
+
+    ]
+  },
+  {
+    "Id": "265",
+    "Name": "Bayview",
+    "Payments": [
+      {
+        "Type": "Debit",
+        "Expression": "^TP[0-9]{4}\\s[0-9]{5}265\\s{2}DIV$",
+        "ColumnLetter": "V"
+      },
+      {
+        "Type": "UnionPay",
+        "Expression": "^XXX$",
+        "ColumnLetter": "W"
+      },
+      {
+        "Type": "Visa",
+        "Expression": "^DEP\\sVSA04588265\\s{2}DIV$",
+        "ColumnLetter": "X"
+      },
+      {
+        "Type": "MasterCard",
+        "Expression": "^DEP\\sMC\\s04588265\\s{2}DIV$",
+        "ColumnLetter": "Y"
+      },
+      {
+        "Type": "AMEX",
+        "Expression": "^DEP\\sAMX04588265\\s{2}DIV$",
+        "ColumnLetter": "Z"
+      }
+
+    ]
   }
+
 ]
