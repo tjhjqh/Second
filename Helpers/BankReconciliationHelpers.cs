@@ -18,6 +18,7 @@ namespace Salton.Helpers
         private static IEnumerable<Store> Stores;
         private static IEnumerable<BankTransaction> BankData;
         private static string BankFileName = "Bank Statement";
+        private static string CashAuditFileName = "Cash Audit";
         internal static void Run(string[] files, string target, DateTime date)
         {
             CleanData();
@@ -32,9 +33,9 @@ namespace Salton.Helpers
             {
                 MessageBox.Show("No Bank Data Found!", "Error");
             }
+            ReadCashPaymentDataSheets(files.First(p => p.Contains(CashAuditFileName, StringComparison.InvariantCultureIgnoreCase)), date);
             foreach (var store in Stores)
             {
-                ReadCashPaymentDatas(files,store, date);
                 foreach (var payment in store.Payments)
                 {
                     var result = RunPayment(store, payment,date);
@@ -52,6 +53,41 @@ namespace Salton.Helpers
             PopulateResult(target);
         }
 
+        private static void ReadCashPaymentDataSheets(string cashFileName, DateTime date)
+        {
+            using (var wb = new XLWorkbook(cashFileName, XLEventTracking.Disabled))
+            {
+                foreach (var store in Stores)
+                {
+
+                    var ws = wb.Worksheet(store.Name);
+                    if (ws == null)
+                    {
+                        MessageBox.Show($"Could not find Cahs Audit Sheet for store: {store.Name}", "Error");
+                    }
+                    var storeDataList = ReadCashPaymentSheet(ws);
+                    var previousMonthDate = date.AddMonths(-1);
+                    var storeData = StoreDatas.FirstOrDefault(p => p.Store.Name == store.Name);
+                    if (storeData == null)
+                    {
+                        storeData = new StoreData
+                        {
+                            Store = store,
+                            CurrentMonthData = new List<CashPayment>(),
+                            PreviousMonthData = new List<CashPayment>(),
+                            BankReconciliationResult = new List<BankPaymentReconciliation>()
+                        };
+                        StoreDatas.Add(storeData);
+                    }
+                    if (storeDataList.Any())
+                    {
+                        storeData.PreviousMonthData.AddRange(storeDataList.Where(p => p.Date.HasValue && p.Date.Value.Month == previousMonthDate.Month && p.Date.Value.Year == previousMonthDate.Year));
+                        storeData.CurrentMonthData.AddRange(storeDataList.Where(p => p.Date.HasValue && p.Date.Value.Month == date.Month && p.Date.Value.Year == date.Year));
+                    }
+
+                }
+            }
+        }
         private static void PopulateResult(string target)
         {
 
@@ -83,7 +119,6 @@ namespace Salton.Helpers
                 var titlesStyle = wb.Style;
                 titlesStyle.Font.Bold = true;
                 titlesStyle.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                titlesStyle.Fill.BackgroundColor = XLColor.Cyan;
 
                 // Format all titles in one shot
                 wb.NamedRanges.NamedRange("Titles").Ranges.Style = titlesStyle;
@@ -279,74 +314,45 @@ namespace Salton.Helpers
             return null;
         }
 
-        private static void ReadCashPaymentDatas(string[] files, Store store,DateTime date)
+        private static IEnumerable<CashPayment> ReadCashPaymentSheet(IXLWorksheet ws)
         {
-            var storeFileName = $"{store.Name} Cash audit";
-            foreach (var file in files.Where(p=>p.Contains(storeFileName,StringComparison.InvariantCultureIgnoreCase)))
+            var CreditNoteIssuedTitle = $"CREDIT NOTE {ws.Cell("L1").Value}";
+            var CreditNoteRedeemedTitle = $"CREDIT NOTE {ws.Cell("M1").Value}";
+            var GiftCertificateIssuedTitle = $"GIFT CERTIFICATE {ws.Cell("H1").Value}";
+            var GiftCertificateRedeemedTitle = $"GIFT CERTIFICATE {ws.Cell("I1").Value}";
+
+            ws.Cell("H1").Value = GiftCertificateIssuedTitle;
+            ws.Cell("I1").Value = GiftCertificateRedeemedTitle;
+            ws.Cell("L1").Value = CreditNoteIssuedTitle;
+            ws.Cell("M1").Value = CreditNoteRedeemedTitle;
+
+            DataTable dataTable = ws.RangeUsed().AsTable().AsNativeDataTable();
+            return dataTable.AsEnumerable().Select(p => new CashPayment
             {
-                var storeDataList = ReadCashPaymentData(file);
-                var previousMonthDate = date.AddMonths(-1);
-                var storeData = StoreDatas.FirstOrDefault(p=>p.Store.Name == store.Name);
-                if (storeData == null)
-                {
-                    storeData = new StoreData { 
-                        Store = store,
-                        CurrentMonthData = new List<CashPayment>(),
-                        PreviousMonthData = new List<CashPayment>(),
-                        BankReconciliationResult = new List<BankPaymentReconciliation>()
-                    };
-                    StoreDatas.Add(storeData);
-                }
-                if (storeDataList.Any())
-                {
-                    storeData.PreviousMonthData.AddRange(storeDataList.Where(p=>p.Date.HasValue && p.Date.Value.Month == previousMonthDate.Month && p.Date.Value.Year == previousMonthDate.Year));
-                    storeData.CurrentMonthData.AddRange(storeDataList.Where(p => p.Date.HasValue && p.Date.Value.Month == date.Month && p.Date.Value.Year == date.Year));
-                }
-            }
-        }
+                Date = ReadDatetime(p, "Date"),
+                Debit = ReadDecimal(p, "Debit"),
+                Amex = ReadDecimal(p, "Amex"),
+                Visa = ReadDecimal(p, "VISA"),
+                MasterCard = ReadDecimal(p, "MC"),
+                Cash = ReadDecimal(p, "CASH"),
+                CreditNoteIssued = ReadDecimal(p, CreditNoteIssuedTitle),
+                CreditNoteRedeemed = ReadDecimal(p, CreditNoteRedeemedTitle),
+                Diff = ReadDecimal(p, "DIFF"),
+                Discover = ReadDecimal(p, "Discover"),
+                FxRate = ReadDecimal(p, "F/X"),
+                Gc = ReadDecimal(p, "Gc"),
+                GiftCertificateIssued = ReadDecimal(p, GiftCertificateIssuedTitle),
+                GiftCertificateRedeemed = ReadDecimal(p, GiftCertificateRedeemedTitle),
+                Gross = ReadDecimal(p, "GROSS"),
+                GST = ReadDecimal(p, "GST"),
+                NET = ReadDecimal(p, "NET"),
+                PST = ReadDecimal(p, "PST"),
+                Total = ReadDecimal(p, "TOTAL"),
+                Union = ReadDecimal(p, "UNION"),
+                UnKnow = ReadDecimal(p, "UNKNOWN"),
+                Usd = ReadDecimal(p, "USD"),
+            }).ToList();
 
-        private static IEnumerable<CashPayment> ReadCashPaymentData(string fileName)
-        {
-            using (var wb = new XLWorkbook(fileName, XLEventTracking.Disabled))
-            {
-                var ws = wb.Worksheet(1);
-                var CreditNoteIssuedTitle = $"CREDIT NOTE {ws.Cell("L1").Value}";
-                var CreditNoteRedeemedTitle = $"CREDIT NOTE {ws.Cell("M1").Value}";
-                var GiftCertificateIssuedTitle = $"GIFT CERTIFICATE {ws.Cell("H1").Value}";
-                var GiftCertificateRedeemedTitle = $"GIFT CERTIFICATE {ws.Cell("I1").Value}";
-
-                ws.Cell("H1").Value = GiftCertificateIssuedTitle;
-                ws.Cell("I1").Value = GiftCertificateRedeemedTitle;
-                ws.Cell("L1").Value = CreditNoteIssuedTitle;
-                ws.Cell("M1").Value = CreditNoteRedeemedTitle;
-
-                DataTable dataTable = ws.RangeUsed().AsTable().AsNativeDataTable();
-                return dataTable.AsEnumerable().Select(p => new CashPayment
-                {
-                    Date = ReadDatetime(p, "Date"),
-                    Debit = ReadDecimal(p, "Debit"),
-                    Amex = ReadDecimal(p, "Amex"),
-                    Visa = ReadDecimal(p, "VISA"),
-                    MasterCard = ReadDecimal(p, "MC"),
-                    Cash = ReadDecimal(p, "CASH"),
-                    CreditNoteIssued = ReadDecimal(p, CreditNoteIssuedTitle),
-                    CreditNoteRedeemed  = ReadDecimal(p, CreditNoteRedeemedTitle),
-                    Diff = ReadDecimal(p, "DIFF"),
-                    Discover = ReadDecimal(p, "Discover"),
-                    FxRate = ReadDecimal(p, "F/X"),
-                    Gc = ReadDecimal(p, "Gc"),
-                    GiftCertificateIssued = ReadDecimal(p, GiftCertificateIssuedTitle),
-                    GiftCertificateRedeemed = ReadDecimal(p, GiftCertificateRedeemedTitle),
-                    Gross = ReadDecimal(p, "GROSS"),
-                    GST = ReadDecimal(p, "GST"),
-                    NET = ReadDecimal(p, "NET"),
-                    PST = ReadDecimal(p, "PST"),
-                    Total = ReadDecimal(p, "TOTAL"),
-                    Union = ReadDecimal(p, "UNION"),
-                    UnKnow = ReadDecimal(p, "UNKNOWN"),
-                    Usd = ReadDecimal(p, "USD"),
-                }).ToList();
-            }
         }
 
         private static BankFileMapping ReadBankFileMapping()
