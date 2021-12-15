@@ -184,15 +184,15 @@ namespace Salton.Helpers
             var previousMonthOutStandingDebit = previousMonthOutStandingRecords.Sum(p => p.Debit ?? 0);
             var previousMonthOutStandingCredit = previousMonthOutStandingRecords.Sum(p => p.Credit ?? 0);
 
-            var currentMonthAmountRecords = list
-                .Where(p => p.CashTransaction != null &&
-                    p.CashTransaction.Date.HasValue && p.BankTransaction.Date.Value.Month == p.CashTransaction.Date.Value.Month && p.BankTransaction.Date.Value.Year == p.CashTransaction.Date.Value.Year &&
-                    p.BankTransaction.Date.HasValue && p.BankTransaction.Date.Value.Month == date.Month && p.BankTransaction.Date.Value.Year == date.Year
+            var currentMonthAmountRecords = cashPaymentData
+                .Where(p => 
+                    p.Date.HasValue &&
+                    p.Date.Value.Month == date.Month && p.Date.Value.Year == date.Year
                 );
 
-            var currentMonthAmountDebit = currentMonthAmountRecords.Sum(p => p.BankTransaction.Debit ?? 0);
+            var currentMonthAmountDebit = currentMonthAmountRecords.Sum(p => p.Debit ?? 0);
 
-            var currentMonthAmountCredit = currentMonthAmountRecords.Sum(p => p.BankTransaction.Credit ?? 0);
+            var currentMonthAmountCredit = currentMonthAmountRecords.Sum(p => p.Credit ?? 0);
 
             return new BankReconciliationResult {
                 BankReconciliationRecords = list,
