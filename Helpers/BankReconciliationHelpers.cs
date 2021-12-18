@@ -114,6 +114,7 @@ namespace Salton.Helpers
                     }
 
                 }
+                PopulateStoreFee(wb, ws.Name);
 
                 // Prepare the style for the titles
                 var titlesStyle = wb.Style;
@@ -126,6 +127,28 @@ namespace Salton.Helpers
                 wb.Save();
             }
 
+        }
+
+        private static void PopulateStoreFee(XLWorkbook wb, string sheetName)
+        {
+            var list = StoreDatas.Select(p=>new { 
+                Name = $"{p.Store.Name} Fee",
+                Fee = GetStoreFee(p.Store)
+            });
+            PopulateList(list, sheetName,2,"Store Fees",wb);
+        }
+
+        private static decimal GetStoreFee(Store store)
+        {
+            var feeList = BankData
+                .Where(p=>
+                    p.Description.Contains($"{store.Id}  DIV") &&
+                    (p.Description.Contains("FRA") ||
+                    p.Description.Contains("FEE"))
+                );
+            var debit = feeList.Sum(p=>p.Debit??0);
+            var credit= feeList.Sum(p => p.Credit??0);
+            return credit - debit;
         }
 
         private static void PrepareStoreResultSheet(XLWorkbook wb, string name)
