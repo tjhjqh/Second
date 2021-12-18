@@ -195,6 +195,7 @@ namespace Salton.Helpers
                 CashTransactionDebit = p.CashTransaction?.Debit,
                 CashTransactionCredit = p.CashTransaction?.Credit,
                 CashTransactionMatched = p.CashTransaction?.Matched,
+                SumOff = p.BankTransaction.SumOff
             }),
             resultSheetName, 4, $"{store.Name} {payment.Type} BankReconciliation Records", wb);
 
