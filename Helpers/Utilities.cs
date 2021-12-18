@@ -48,5 +48,29 @@ namespace Salton.Helpers
             }
             return null;
         }
+
+        internal static IEnumerable<string> GetCombinations(decimal[] set, decimal sum, string values)
+        {
+            for (int i = 0; i < set.Length; i++)
+            {
+                decimal left = sum - set[i];
+                string vals = set[i] + "," + values;
+                if (left == 0)
+                {
+                    yield return vals;
+                }
+                else
+                {
+                    decimal[] possible = set.Take(i).Where(n => n <= sum).ToArray();
+                    if (possible.Length > 0)
+                    {
+                        foreach (string s in GetCombinations(possible, left, vals))
+                        {
+                            yield return s;
+                        }
+                    }
+                }
+            }
+        }
     }
 }

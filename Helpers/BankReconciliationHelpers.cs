@@ -185,6 +185,20 @@ namespace Salton.Helpers
 
             PopulateList(result.BankReconciliationResult.CurrentMonthOutStandingRecords, resultSheetName, 4, $"{store.Name} {payment.Type} Current Month OutStanding Records", wb);
 
+            PopulateList(result.BankReconciliationResult.BankReconciliationRecords
+            .Select(p => new {
+                BankTransactionDate = p.BankTransaction.Date,
+                BankTransactionDescription = p.BankTransaction.Description,
+                BankTransactionDebit = p.BankTransaction.Debit,
+                BankTransactionCredit = p.BankTransaction.Credit,
+                CashTransactionDate = p.CashTransaction?.Date,
+                CashTransactionDebit = p.CashTransaction?.Debit,
+                CashTransactionCredit = p.CashTransaction?.Credit,
+                CashTransactionMatched = p.CashTransaction?.Matched,
+            }),
+            resultSheetName, 4, $"{store.Name} {payment.Type} BankReconciliation Records", wb);
+
+
 
         }
 
@@ -236,6 +250,37 @@ namespace Salton.Helpers
                 };
                 list.Add(record);
             }
+
+            foreach (var cashPayment in cashPaymentData)
+            {
+                if (!cashPayment.Matched && cashPayment.Date.HasValue && cashPayment.Date.Value.Month == date.Month && cashPayment.Date.Value.Year == date.Year)
+                {
+                    if (cashPayment.Credit.HasValue)
+                    {
+                        var sumList = Utilities.GetCombinations(list.Where(p =>p.CashTransaction ==null && !p.BankTransaction.SumOff && p.BankTransaction.Credit.HasValue).Select(p => p.BankTransaction.Credit ?? 0).ToArray(), cashPayment.Credit.Value, "").ToList();
+                        if (sumList.Any(p=>!string.IsNullOrEmpty(p)))
+                        {
+                            foreach (var factor in sumList.FirstOrDefault(p => !string.IsNullOrEmpty(p)).Split(","))
+                            {
+                                var value = Utilities.ToDecimal(factor);
+                                if (value.HasValue)
+                                {
+                                    var sumOff = list.FirstOrDefault(p => p.CashTransaction == null && !p.BankTransaction.SumOff && p.BankTransaction.Credit.HasValue && p.BankTransaction.Credit.Value == value);
+                                    if (sumOff != null)
+                                    {
+                                        sumOff.BankTransaction.SumOff = true;
+                                        sumOff.CashTransaction = cashPayment;
+                                    }
+                                }
+                            }
+                            cashPayment.Matched = true;
+                        }
+                    }
+                }
+
+            }
+
+
             var currentMonthOutStandingRecords = cashPaymentData
                 .Where(p => !p.Matched && p.Date.HasValue && p.Date.Value.Month == date.Month && p.Date.Value.Year == date.Year);
             var currentMonthOutStandingDebit = currentMonthOutStandingRecords.Sum(p => p.Debit ?? 0);
