@@ -94,6 +94,14 @@ namespace Salton.Helpers
             var mapping = ReadBankFileMapping();
             using (var wb = new XLWorkbook(target, XLEventTracking.Disabled))
             {
+                PrepareStoreResultSheet(wb, BankFileName);
+                PopulateSheet(BankData.Select(p=>new {
+                    p.RowNumber,
+                    p.Currency,
+                    p.Description,
+                    p.Debit,
+                    p.Credit,
+                }),BankFileName,wb);
                 var ws = wb.Worksheet(1);
                 var cell = ws.Range("A:A").Search(mapping.ThisMonthOutStanding, CompareOptions.OrdinalIgnoreCase, false).FirstOrDefault();
                 if (cell == null)
@@ -133,12 +141,12 @@ namespace Salton.Helpers
         {
             var list = StoreDatas.Select(p=>new { 
                 Name = $"{p.Store.Name} Fee",
-                Fee = GetStoreFee(p.Store)
+                Fee = GetStoreFee(wb,p.Store)
             });
             PopulateList(list, sheetName,2,"Store Fees",wb);
         }
 
-        private static decimal GetStoreFee(Store store)
+        private static decimal GetStoreFee(XLWorkbook wb, Store store)
         {
             var feeList = BankData
                 .Where(p=>
@@ -146,6 +154,7 @@ namespace Salton.Helpers
                     (p.Description.Contains("FRA") ||
                     p.Description.Contains("FEE"))
                 );
+            HighLightBankStatementCell(wb, feeList);
             var debit = feeList.Sum(p=>p.Debit??0);
             var credit= feeList.Sum(p => p.Credit??0);
             return credit - debit;
@@ -199,8 +208,19 @@ namespace Salton.Helpers
             }),
             resultSheetName, 4, $"{store.Name} {payment.Type} BankReconciliation Records", wb);
 
+            HighLightBankStatementCell(wb,
+                result.BankReconciliationResult.BankReconciliationRecords.Where(p=>p.CashTransaction != null).Select(p=>p.BankTransaction)
+            );
+        }
 
-
+        private static void HighLightBankStatementCell(XLWorkbook wb, IEnumerable<BankTransaction> records)
+        {
+            var ws = wb.Worksheet(BankFileName);
+            foreach (var matchedRecord in records)
+            {
+                ws.Cell($"D{matchedRecord.RowNumber}").Style.Fill.BackgroundColor = XLColor.Green;
+                ws.Cell($"E{matchedRecord.RowNumber}").Style.Fill.BackgroundColor = XLColor.Green;
+            }
         }
 
         private static void PopulateList<T>(IEnumerable<T> data, string resultSheetName, int endIndex, string title, XLWorkbook wb)
@@ -215,6 +235,16 @@ namespace Salton.Helpers
                 titleCell.AsRange().AddToNamed("Titles");
                 ws.Range(startRow, 1, startRow, endIndex).Merge().AddToNamed("Titles");
                 ws.Cell($"A{startRow + 1}").InsertTable(data);
+                ws.Columns().AdjustToContents();
+            }
+        }
+
+        private static void PopulateSheet<T>(IEnumerable<T> data, string resultSheetName, XLWorkbook wb)
+        {
+            var ws = wb.Worksheet(resultSheetName);
+            if (data.Any())
+            {
+                ws.Cell($"A1").InsertTable(data);
                 ws.Columns().AdjustToContents();
             }
         }
@@ -481,20 +511,23 @@ namespace Salton.Helpers
         {
             var list = new List<BankTransaction>();
             var lines = Utilities.ReadCSVLines(fileName);
+            var index = 2;
             foreach (var line in lines)
             {
                 if (line[0] == "Account Number")
                 {
                     continue;
                 }
-                list.Add(ReadBankTransaction(line));
+                list.Add(ReadBankTransaction(line, index));
+                index++;
             }
             return list.Where(p=>p.Date.HasValue && p.Date.Value.Month == date.Month && p.Date.Value.Year == date.Year).ToList();
         }
 
-        private static BankTransaction ReadBankTransaction(string[] line)
+        private static BankTransaction ReadBankTransaction(string[] line, int index)
         {
             return new BankTransaction { 
+                RowNumber = index,
                 Currency = line[1],
                 Date = Utilities.ToDate(line[3]),
                 Description = line[4],

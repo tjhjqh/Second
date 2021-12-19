@@ -61,6 +61,7 @@ namespace Salton.Models
         public decimal? Credit { get; set; }
         public string Currency { get; set; }
         public bool SumOff { get; set; }
+        public int RowNumber { get; set; }
     }
     public class CashTransaction
     {
