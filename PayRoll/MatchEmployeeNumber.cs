@@ -92,7 +92,7 @@ namespace Salton.PayRoll
                 {
                     foreach (var record in records)
                     {
-                        var line = $"{record.Number},{record.Name}";
+                        var line = $"{record.Number},{record.Section},{record.Name}";
                         writer.WriteLine(line);
                     }
                     writer.Flush();
@@ -131,6 +131,7 @@ namespace Salton.PayRoll
                     employeeData.Number = match.Number;
                     list.Add(new MatchedEmployee { 
                         Name = match.Name,
+                        Section = match.Section,
                         Number = match.Number
                     });
                 }

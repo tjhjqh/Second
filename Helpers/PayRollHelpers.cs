@@ -22,7 +22,8 @@ namespace Salton.Helpers
                 {
                     list.Add(new Employee { 
                         Number = line[0],
-                        Names = new List<string> { line[1].Trim()}
+                        Section = line[1],
+                        Names = new List<string> { line[2].Trim()}
                     });
                 }
                 employeeData = UpdateEmployeeData(employeeData,list);
@@ -58,7 +59,8 @@ namespace Salton.Helpers
                         list.Add(new MatchedEmployee
                         {
                             Name = name,
-                            Number = matchEmployee.Number
+                            Number = matchEmployee.Number,
+                            Section = matchEmployee.Section
                         });
                     }
                     else {
@@ -79,6 +81,7 @@ namespace Salton.Helpers
             foreach (var employee in employeeData)
             {
                 employee.Number = employee.Number.Trim();
+                employee.Section = employee.Section.Trim();
                 employee.Names = employee.Names.Select(p => p.Trim()).ToList();
             }
             return employeeData;
