@@ -89,10 +89,8 @@ namespace Salton.Helpers
                 if (line.Count() >= 7)
                 {
                     var currency = line[currencyIndex];
-                    CultureInfo enUS = new CultureInfo("en-US");
-                    DateTime dateValue;
-                    if (DateTime.TryParseExact(line[dateIndex], "yyyy/MM/dd", enUS,
-                      DateTimeStyles.None, out dateValue))
+                    DateTime? dateValue = Utilities.GetDate(line[dateIndex]);
+                    if (dateValue.HasValue)
                     {
                         var description = line[descriptionIndex];
                         var debit = line[debitIndex];
@@ -109,9 +107,11 @@ namespace Salton.Helpers
                             amount = decimal.Parse(credit);
                         }
 
+                        CultureInfo enUS = new CultureInfo("en-US");
+
                         list.Add(new BankRecord
                         {
-                            Date = dateValue.ToString("MM/dd/yyyy", enUS),
+                            Date = dateValue.Value.ToString("MM/dd/yyyy", enUS),
                             Currency = currency.Equals("USD", StringComparison.InvariantCultureIgnoreCase) ? Currency.USD : Currency.CAD,
                             TransactionType = transactionType,
                             Name = description,

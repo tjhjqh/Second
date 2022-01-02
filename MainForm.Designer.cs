@@ -66,6 +66,8 @@ namespace Salton
             this.bankReconciliationStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.payrollStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.matchStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.inventoryStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.inventoryAdjustment = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -77,7 +79,8 @@ namespace Salton
             this.toolsToolStripMenuItem,
             this.helpToolStripMenuItem,
             this.bankToolStripMenuItem,
-            this.payrollStripMenuItem});
+            this.payrollStripMenuItem,
+            this.inventoryStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(800, 24);
@@ -352,6 +355,21 @@ namespace Salton
             this.matchStripMenuItem.Text = "&Match Employee Number";
             this.matchStripMenuItem.Click += new System.EventHandler(this.matchStripMenuItem_Click);
             // 
+            // inventoryStripMenuItem
+            // 
+            this.inventoryStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.inventoryAdjustment});
+            this.inventoryStripMenuItem.Name = "inventoryStripMenuItem";
+            this.inventoryStripMenuItem.Size = new System.Drawing.Size(69, 20);
+            this.inventoryStripMenuItem.Text = "Inventory";
+            // 
+            // inventoryAdjustment
+            // 
+            this.inventoryAdjustment.Name = "inventoryAdjustment";
+            this.inventoryAdjustment.Size = new System.Drawing.Size(189, 22);
+            this.inventoryAdjustment.Text = "Inventory Adjustment";
+            this.inventoryAdjustment.Click += new System.EventHandler(this.inventoryAdjustment_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -407,6 +425,8 @@ namespace Salton
         private System.Windows.Forms.ToolStripMenuItem payrollStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem matchStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem bankReconciliationStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem inventoryStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem inventoryAdjustment;
     }
 }
 

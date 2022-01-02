@@ -72,5 +72,33 @@ namespace Salton.Helpers
                 }
             }
         }
+
+        internal static DateTime? GetDate(string dateString)
+        {
+            CultureInfo enUS = new CultureInfo("en-US");
+            DateTime dateValue;
+            if (DateTime.TryParseExact(dateString, "yyyy/MM/d", enUS,
+                  DateTimeStyles.None, out dateValue))
+            {
+                return dateValue;
+            }
+            if (DateTime.TryParseExact(dateString, "yyyy/MM/dd", enUS,
+                  DateTimeStyles.None, out dateValue))
+            {
+                return dateValue;
+            }
+            if (DateTime.TryParseExact(dateString, "MM/dd/yyyy", enUS,
+                  DateTimeStyles.None, out dateValue))
+            {
+                return dateValue;
+            }
+            if (DateTime.TryParseExact(dateString, "MM/d/yyyy", enUS,
+                  DateTimeStyles.None, out dateValue))
+            {
+                return dateValue;
+            }
+            return null;
+
+        }
     }
 }

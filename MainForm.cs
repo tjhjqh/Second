@@ -1,4 +1,5 @@
 ﻿using Salton.Bank;
+using Salton.Inventory;
 using Salton.PayRoll;
 using System;
 using System.Collections.Generic;
@@ -114,6 +115,16 @@ namespace Salton
                 Sum += numbers[Position];
             }
             return Sum;
+        }
+
+        private void inventoryAdjustment_Click(object sender, EventArgs e)
+        {
+            var newMDIChild = new InventoryAdjustment
+            {
+                MdiParent = this,
+            };
+            newMDIChild.Show();
+
         }
     }
 }
