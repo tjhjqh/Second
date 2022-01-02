@@ -15,6 +15,8 @@ namespace Salton.Helpers
         
         
         private static int TransactionTypeIndex = 3;
+        private static int ExhangeRateIndex = 11;
+        private static int FxRateIndex = 12;
         private static int CorrectionIndex = 14;
         private static int OriginalIndex = 10;
         private static int ItemIndex = 2;
@@ -33,7 +35,6 @@ namespace Salton.Helpers
                 var currentItem = "";
                 decimal? currentPrice = null;
                 var itemsWithoutPrice = new List<string>();
-                var priceUsed = false;
                 foreach (var dataRow in nonEmptyDataRows)
                 {
                     var itemCell = dataRow.Cell(ItemIndex).CachedValue;
@@ -41,40 +42,23 @@ namespace Salton.Helpers
                         continue;
                     var item = itemCell.ToString();
                     var transactionTypeValue = dataRow.Cell(TransactionTypeIndex).Value;
-                    if (priceUsed && transactionTypeValue != null && transactionTypeValue.ToString().Equals(ItemReceipt, StringComparison.InvariantCultureIgnoreCase))
+
+                    var fxRate = Utilities.ToDecimal(dataRow.Cell(FxRateIndex).Value.ToString());
+                    var exhangeRate = Utilities.ToDecimal(dataRow.Cell(ExhangeRateIndex).Value.ToString());
+
+                    if (transactionTypeValue != null)
                     {
-                        currentPrice = null;
-                        currentItem = "";
-                        priceUsed = false;
-                    }
-                    var quantity = dataRow.Cell(QuantityIndex).Value;
-                    var originalUnit = dataRow.Cell(OriginalUnitIndex).Value;
-                    if (
-                        item == currentItem &&
-                        currentPrice.HasValue && 
-                        transactionTypeValue!=null && 
-                        transactionTypeValue.ToString().Equals(ItemFulfillment,StringComparison.InvariantCultureIgnoreCase) &&
-                        quantity != null && originalUnit !=null 
-                        )
-                    {
-                        var diff = (currentPrice.Value - Utilities.ToDecimal(originalUnit.ToString()) ?? 0) * Utilities.ToDecimal(quantity.ToString()) ?? 0;
-                        dataRow.Cell(ResultIndex-1).SetValue(currentPrice);
-                        dataRow.Cell(ResultIndex).SetValue(diff);
-                        priceUsed = true;
-                    }
-                    else if (item != currentItem)
-                    {
-                        var correctionValue = dataRow.Cell(CorrectionIndex).Value;
-                        var originalValue = dataRow.Cell(OriginalIndex).Value;
-                        if (transactionTypeValue != null && transactionTypeValue.ToString().Equals(ItemReceipt, StringComparison.InvariantCultureIgnoreCase)
-                            && correctionValue != null && originalValue != null
-                            && !string.IsNullOrEmpty(correctionValue.ToString()) && !string.IsNullOrEmpty(originalValue.ToString())
-                            )
+                        // item receipt
+                        if (transactionTypeValue.ToString().Equals(ItemReceipt, StringComparison.InvariantCultureIgnoreCase))
                         {
-                            if (correctionValue.ToString() != originalValue.ToString())
+                            var correctionValue = dataRow.Cell(CorrectionIndex).Value;
+                            var originalValue = dataRow.Cell(OriginalIndex).Value;
+                            if (correctionValue != null && originalValue != null
+                                && !string.IsNullOrEmpty(correctionValue.ToString()) && !string.IsNullOrEmpty(originalValue.ToString())
+                                && (fxRate.HasValue || (exhangeRate.HasValue && exhangeRate.Value != 1))
+                                )
                             {
                                 currentItem = item;
-                                priceUsed = false;
                                 var correctionUnitPrice = GetCorrectionUnitPrice(currentItem, dataRow, sheet);
                                 if (correctionUnitPrice.HasValue)
                                 {
@@ -86,6 +70,29 @@ namespace Salton.Helpers
                                     currentPrice = null;
                                 }
                             }
+                            else if (currentItem != item)
+                            {
+                                currentItem = "";
+                                currentPrice = null;
+                            }
+
+                        }
+
+                        var quantity = dataRow.Cell(QuantityIndex).Value;
+                        var originalUnit = dataRow.Cell(OriginalUnitIndex).Value;
+                        if (transactionTypeValue.ToString().Equals(ItemFulfillment, StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            if (
+                                item == currentItem &&
+                                currentPrice.HasValue &&
+                                quantity != null && originalUnit != null
+                                )
+                            {
+                                var diff = Math.Round((currentPrice.Value - Utilities.ToDecimal(originalUnit.ToString()) ?? 0) * Utilities.ToDecimal(quantity.ToString()) ?? 0, 2);
+                                dataRow.Cell(ResultIndex - 1).SetValue(currentPrice);
+                                dataRow.Cell(ResultIndex).SetValue(diff);
+                            }
+
                         }
                     }
 
@@ -127,20 +134,23 @@ namespace Salton.Helpers
         private static decimal? GetCorrectionUnitPrice(string currentItem, IXLRow dataRow, IXLWorksheet sheet)
         {
             var currentCorrectionCell = dataRow.Cell(CorrectionIndex);
+            var itemCell = dataRow.Cell(ItemIndex);
             decimal? value = null;
             for (int i = 0; i < 20; i++)
             {
-                var itemCell = dataRow.Cell(ItemIndex);
-                var itemCellValue = itemCell.CachedValue.ToString();
-                var itemCellValue1 = sheet.Cell($"{itemCell.Address.ColumnLetter}{itemCell.Address.RowNumber + i + 1}").Value;
-                var itemCellValue2 = sheet.Cell($"{itemCell.Address.ColumnLetter}{itemCell.Address.RowNumber + i + 2}").Value;
+                var itemCellValue = sheet.Cell($"{itemCell.Address.ColumnLetter}{itemCell.Address.RowNumber + i}").CachedValue.ToString();
+                if (!string.IsNullOrEmpty(itemCellValue) && itemCellValue != currentItem)
+                {
+                    break;
+                }
+                var itemCellValue1 = sheet.Cell($"{itemCell.Address.ColumnLetter}{itemCell.Address.RowNumber + i + 1}").CachedValue;
+                var itemCellValue2 = sheet.Cell($"{itemCell.Address.ColumnLetter}{itemCell.Address.RowNumber + i + 2}").CachedValue;
 
                 var unitPriceCellValue = sheet.Cell($"{currentCorrectionCell.Address.ColumnLetter}{currentCorrectionCell.Address.RowNumber + i}").Value;
                 var unitPriceCellValue1 = sheet.Cell($"{currentCorrectionCell.Address.ColumnLetter}{currentCorrectionCell.Address.RowNumber + i + 1}").Value;
                 var unitPriceCellValue2 = sheet.Cell($"{currentCorrectionCell.Address.ColumnLetter}{currentCorrectionCell.Address.RowNumber + i + 2}").Value;
 
-                if (itemCellValue == currentItem && 
-                    unitPriceCellValue != null && !string.IsNullOrEmpty(unitPriceCellValue.ToString()) 
+                if (unitPriceCellValue != null && !string.IsNullOrEmpty(unitPriceCellValue.ToString()) 
                     && (unitPriceCellValue1 == null || string.IsNullOrEmpty(unitPriceCellValue1.ToString())) 
                     && (unitPriceCellValue2 == null || string.IsNullOrEmpty(unitPriceCellValue2.ToString()))
                     && (itemCellValue1 == null || string.IsNullOrEmpty(itemCellValue1.ToString()) || itemCellValue1.ToString() == currentItem)
