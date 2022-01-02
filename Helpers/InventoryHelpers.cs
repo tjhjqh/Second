@@ -55,7 +55,7 @@ namespace Salton.Helpers
                             var originalValue = dataRow.Cell(OriginalIndex).Value;
                             if (correctionValue != null && originalValue != null
                                 && !string.IsNullOrEmpty(correctionValue.ToString()) && !string.IsNullOrEmpty(originalValue.ToString())
-                                && (fxRate.HasValue || (exhangeRate.HasValue && exhangeRate.Value != 1))
+                                && (fxRate.HasValue|| (exhangeRate.HasValue && exhangeRate.Value != 1))
                                 )
                             {
                                 currentItem = item;
@@ -135,27 +135,18 @@ namespace Salton.Helpers
         {
             var currentCorrectionCell = dataRow.Cell(CorrectionIndex);
             var itemCell = dataRow.Cell(ItemIndex);
+            var isPriceCell = dataRow.Cell(ResultIndex+1);
             decimal? value = null;
             for (int i = 0; i < 20; i++)
             {
                 var itemCellValue = sheet.Cell($"{itemCell.Address.ColumnLetter}{itemCell.Address.RowNumber + i}").CachedValue.ToString();
+                var isPriceCellValue = sheet.Cell($"{isPriceCell.Address.ColumnLetter}{isPriceCell.Address.RowNumber + i}").Value.ToString();
                 if (!string.IsNullOrEmpty(itemCellValue) && itemCellValue != currentItem)
                 {
                     break;
                 }
-                var itemCellValue1 = sheet.Cell($"{itemCell.Address.ColumnLetter}{itemCell.Address.RowNumber + i + 1}").CachedValue;
-                var itemCellValue2 = sheet.Cell($"{itemCell.Address.ColumnLetter}{itemCell.Address.RowNumber + i + 2}").CachedValue;
-
                 var unitPriceCellValue = sheet.Cell($"{currentCorrectionCell.Address.ColumnLetter}{currentCorrectionCell.Address.RowNumber + i}").Value;
-                var unitPriceCellValue1 = sheet.Cell($"{currentCorrectionCell.Address.ColumnLetter}{currentCorrectionCell.Address.RowNumber + i + 1}").Value;
-                var unitPriceCellValue2 = sheet.Cell($"{currentCorrectionCell.Address.ColumnLetter}{currentCorrectionCell.Address.RowNumber + i + 2}").Value;
-
-                if (unitPriceCellValue != null && !string.IsNullOrEmpty(unitPriceCellValue.ToString()) 
-                    && (unitPriceCellValue1 == null || string.IsNullOrEmpty(unitPriceCellValue1.ToString())) 
-                    && (unitPriceCellValue2 == null || string.IsNullOrEmpty(unitPriceCellValue2.ToString()))
-                    && (itemCellValue1 == null || string.IsNullOrEmpty(itemCellValue1.ToString()) || itemCellValue1.ToString() == currentItem)
-                    && (itemCellValue2 == null || string.IsNullOrEmpty(itemCellValue2.ToString()) || itemCellValue2.ToString() == currentItem)
-                    )
+                if (isPriceCellValue == "Yes")
                 {
                     if (decimal.TryParse(unitPriceCellValue.ToString(), out decimal doubleValue))
                     {
