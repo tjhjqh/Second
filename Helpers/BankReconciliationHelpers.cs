@@ -63,7 +63,7 @@ namespace Salton.Helpers
                     var ws = wb.Worksheet(store.Name);
                     if (ws == null)
                     {
-                        MessageBox.Show($"Could not find Cahs Audit Sheet for store: {store.Name}", "Error");
+                        MessageBox.Show($"Could not find Cash Audit Sheet for store: {store.Name}", "Error");
                     }
                     var storeDataList = ReadCashPaymentSheet(ws);
                     var previousMonthDate = date.AddMonths(-1);

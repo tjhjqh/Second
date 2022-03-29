@@ -28,7 +28,7 @@ namespace Salton.Helpers
         {
             DateTime dateValue;
             CultureInfo enUS = new CultureInfo("en-US");
-            if (DateTime.TryParseExact(value, "MM/d/yyyy", enUS,
+            if (DateTime.TryParseExact(value, new string[] { "MM/d/yyyy", "M/d/yyyy" }, enUS,
               DateTimeStyles.None, out dateValue))
             {
                 return dateValue;
